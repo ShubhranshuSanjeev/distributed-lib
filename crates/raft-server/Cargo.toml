@@ -1,0 +1,16 @@
+[package]
+name = "raft-server"
+version = "0.1.0"
+edition = "2024"
+authors = ["ShubhranshuSanjeev"]
+license = ""
+
+[dependencies]
+tonic = { workspace = true }
+tonic-prost = { workspace = true }
+prost = { workspace = true }
+raft-models = { path = "../raft-models" }
+
+[build-dependencies]
+tonic-prost-build = { workspace = true }
+protox = { workspace = true }

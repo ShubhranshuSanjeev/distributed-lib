@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package raft.service;
+
+import "raft/rpc-models/rpc-models.proto";
+
+service RaftService {
+  rpc AppendEntries(raft.rpc_models.AppendEntriesRequest) returns (raft.rpc_models.AppendEntriesResponse) {}
+  rpc RequestVote(raft.rpc_models.RequestVoteRequest) returns (raft.rpc_models.RequestVoteResponse) {}
+}

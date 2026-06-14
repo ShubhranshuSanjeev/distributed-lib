@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package raft.state;
+
+import "raft/common/common.proto";
+
+message PersistentState {
+    uint64 current_term = 1;
+    uint64 voted_for = 2;
+    repeated raft.common.LogEntry log = 3;
+}
+
+message ServerState {
+    uint64 commit_index = 1;
+    uint64 last_applied = 2;
+}
+
+message LeaderState {
+    repeated uint64 next_index = 1;
+    repeated uint64 match_index = 2;
+}
