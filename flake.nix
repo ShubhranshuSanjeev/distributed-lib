@@ -27,6 +27,7 @@
             pkg-config
             just
             protobuf
+            cargo-watch
           ];
 
           shellHook = ''
