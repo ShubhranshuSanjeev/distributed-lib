@@ -8,11 +8,17 @@ pub struct PersistentState {
     #[prost(message, repeated, tag = "3")]
     pub log: ::prost::alloc::vec::Vec<super::common::LogEntry>,
 }
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ServerState {
     #[prost(uint64, tag = "1")]
-    pub commit_index: u64,
+    pub current_term: u64,
     #[prost(uint64, tag = "2")]
+    pub voted_for: u64,
+    #[prost(message, repeated, tag = "3")]
+    pub log: ::prost::alloc::vec::Vec<super::common::LogEntry>,
+    #[prost(uint64, tag = "4")]
+    pub commit_index: u64,
+    #[prost(uint64, tag = "5")]
     pub last_applied: u64,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
