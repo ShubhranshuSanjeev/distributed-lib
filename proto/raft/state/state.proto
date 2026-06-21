@@ -11,8 +11,11 @@ message PersistentState {
 }
 
 message ServerState {
-    uint64 commit_index = 1;
-    uint64 last_applied = 2;
+    uint64 current_term = 1;
+    uint64 voted_for = 2;
+    repeated raft.common.LogEntry log = 3;
+    uint64 commit_index = 4;
+    uint64 last_applied = 5;
 }
 
 message LeaderState {
