@@ -798,6 +798,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "raft-core"
+version = "0.1.0"
+dependencies = [
+ "dotenv",
+ "once_cell",
+ "prost",
+ "raft-models",
+ "rand",
+ "tokio",
+ "tonic",
+ "tonic-prost",
+]
+
+[[package]]
 name = "raft-models"
 version = "0.1.0"
 dependencies = [
@@ -817,6 +831,7 @@ dependencies = [
  "prost",
  "protox",
  "raft-client",
+ "raft-core",
  "raft-models",
  "rand",
  "tokio",
