@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/raft-models", "crates/raft-server", "crates/raft-client"]
+members = ["crates/raft-models", "crates/raft-server", "crates/raft-client", "crates/raft-core"]
 
 [workspace.dependencies]
 tonic = "0.14"
