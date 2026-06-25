@@ -1,7 +1,12 @@
-use std::{cell::LazyCell, marker::PhantomData};
+use std::cell::LazyCell;
+
+use either::Either;
 
 use crate::{
-    channels::{AppendEntries, RequestVote}, context::Raft, states::{Candidate, Follower, Leader}, utils::state_transition::STResult
+    channels::{RequestVote, events::Event},
+    state_machine::{Raft, become_candidate, become_follower, become_leader},
+    states::{Candidate, Follower, Leader},
+    utils::state_transition::STResult,
 };
 
 const JITTER_MIN: u64 = 1;
@@ -12,30 +17,18 @@ const ELECTION_TIMEOUT: LazyCell<std::time::Duration> = LazyCell::new(|| {
     std::time::Duration::from_millis(500 + jitter)
 });
 
-pub fn check_for_election(
-    raft: Raft<Follower>,
-) -> STResult<Raft<Candidate>, Raft<Follower>> {
+pub fn start_election(raft: Raft<Follower>) -> STResult<Raft<Candidate>, Raft<Follower>> {
     let timed_out = {
-        std::time::Instant::now().duration_since(raft.context.borrow().last_heartbeat)
-            > *ELECTION_TIMEOUT
+        let raft_ctx = raft.context.borrow();
+        std::time::Instant::now().duration_since(raft_ctx.last_heartbeat) > *ELECTION_TIMEOUT
     };
-    if timed_out {
-        return STResult::Ok(Raft {
-            context: raft.context.clone(),
-            state: PhantomData::<Candidate>,
-            from_service: raft.from_service,
-            to_service: raft.to_service,
-        });
+    if !timed_out {
+        return STResult::Aborted(raft);
     }
-    STResult::Aborted(raft)
-}
 
-pub async fn conduct_election<'a>(
-    raft: Raft<Candidate>,
-) -> STResult<Raft<Leader>, Raft<Candidate>> {
-    let raft_ctx = raft.context.borrow();
-
+    let raft = become_candidate(raft);
     let request_vote_payload = {
+        let raft_ctx = raft.context.borrow();
         let (last_log_index, last_log_term) = raft_ctx
             .server_state
             .log
@@ -51,52 +44,38 @@ pub async fn conduct_election<'a>(
         }
     };
 
-    raft.to_service.send(RequestVote(request_vote_payload));
+    let send_result = raft.send(Event::RequestVote(RequestVote {
+        req: request_vote_payload,
+    }));
 
-    // TODO: send request vote event on the channel
-    // to raft_server and await for responses
-    // let mut jset = tokio::task::JoinSet::new();
+    match send_result {
+        Ok(_) => STResult::Ok(raft),
+        Err(_) => STResult::Aborted(become_follower(Either::Right(raft))),
+    }
+}
 
-    // for member in raft_ctx.cluster_config.members.iter() {
-    //     let rpc_client = member.rpc_client.clone();
+pub fn drive_election(
+    vote_resp: raft_models::rpc::RequestVoteResponse,
+    raft: Raft<Candidate>,
+) -> STResult<Raft<Leader>, Raft<Candidate>> {
+    {
+        // state update
+        let mut raft_ctx = raft.context.borrow_mut();
+        raft_ctx.election_state.max_term_seen =
+            std::cmp::max(raft_ctx.election_state.max_term_seen, vote_resp.term);
+        if vote_resp.vote_granted {
+            raft_ctx.election_state.votes_granted += 1;
+        }
+    }
 
-    //     jset.spawn(async move {
-    //         let mut rpc_client = rpc_client.lock().await;
-    //         let future = rpc_client.request_vote(tonic::Request::new(request_vote_payload.clone()));
-    //         future.await
-    //     });
-    // }
+    let transition_to_leader = {
+        let raft_ctx = raft.context.borrow();
+        raft_ctx.election_state.votes_granted >= raft.replication_factor()
+    };
 
-    // let results = jset.join_all().await;
-    // let mut votes_granted: u64 = 0;
-    // for result in results {
-    //     match result {
-    //         Ok(response) => {
-    //             if response.get_ref().vote_granted {
-    //                 votes_granted += 1;
-    //                 // TODO: there was some logic related to term returned in the response
-    //                 // if the term in the response is greater than the candidate's term, update the candidate's term
-    //                 // check this and implement if required
-    //             }
-    //         }
-    //         Err(status) => {
-    //             println!(
-    //                 "ErrorCode: {}, Message: {}",
-    //                 status.code(),
-    //                 status.message()
-    //             );
-    //         }
-    //     }
-    // }
+    if transition_to_leader {
+        return STResult::Ok(become_leader(raft));
+    }
 
-    // if votes_granted < raft.context.borrow().cluster_config.replication_factor {
-    //     return STResult::Aborted(raft);
-    // }
-
-    STResult::Ok(Raft {
-        context: raft.context.clone(),
-        state: PhantomData::<Leader>,
-        from_service: raft.from_service,
-        to_service: raft.to_service,
-    })
+    STResult::Aborted(raft)
 }

@@ -1,16 +1,27 @@
 use crate::cluster::member::ClusterMemberId;
 
-pub struct AppendEntries((raft_models::rpc::AppendEntriesRequest, ));
-pub struct RequestVote(raft_models::rpc::RequestVoteRequest);
+// Core -> Server, or Server -> Core
+pub struct AppendEntries {
+    pub req: raft_models::rpc::AppendEntriesRequest,
+}
+
+pub struct RequestVote {
+    pub req: raft_models::rpc::RequestVoteRequest,
+}
+
+// From Server to Core
 pub struct AppendResult {
     from: ClusterMemberId,
     response: raft_models::rpc::AppendEntriesResponse,
 }
 pub struct VoteResult {
-    from: ClusterMemberId,
-    response: raft_models::rpc::RequestVoteResponse,
+    pub from: ClusterMemberId,
+    pub response: raft_models::rpc::RequestVoteResponse,
 }
 
-enum Event {
-
+pub enum Event {
+    AppendEntries(AppendEntries),
+    RequestVote(RequestVote),
+    AppendResult(AppendResult),
+    VoteResult(VoteResult),
 }

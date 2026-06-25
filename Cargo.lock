@@ -802,6 +802,7 @@ name = "raft-core"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "either",
  "once_cell",
  "prost",
  "raft-models",

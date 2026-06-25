@@ -1,16 +1,17 @@
-use std::{cell::RefCell, collections::HashMap, marker::PhantomData, rc::Rc};
+use crate::cluster::ClusterConfig;
 
-use crate::{
-    cluster::{ClusterConfig, member::ClusterMemberId},
-    states::Follower,
-};
+#[derive(Default)]
+pub struct ElectionState {
+    pub votes_granted: u64,
+    pub max_term_seen: u64,
+}
 
 pub struct RaftContext {
     pub server_state: raft_models::state::ServerState,
     pub leader_state: raft_models::state::LeaderState,
     pub last_heartbeat: std::time::Instant,
     pub cluster_config: ClusterConfig,
-    pub election_state: HashMap<ClusterMemberId, raft_models::rpc::RequestVoteResponse>,
+    pub election_state: ElectionState,
 }
 
 impl RaftContext {
@@ -23,7 +24,7 @@ impl RaftContext {
             cluster_config,
             leader_state: raft_models::state::LeaderState::default(),
             last_heartbeat: std::time::Instant::now(),
-            election_state: HashMap::new(),
+            election_state: ElectionState::default(),
         })
     }
 
@@ -33,31 +34,7 @@ impl RaftContext {
             leader_state: raft_models::state::LeaderState::default(),
             last_heartbeat: std::time::Instant::now(),
             cluster_config: ClusterConfig::from_env()?,
-            election_state: HashMap::new(),
-        })
-    }
-}
-
-pub struct Raft<T> {
-    pub context: Rc<RefCell<RaftContext>>,
-    pub state: PhantomData<T>,
-
-    pub from_service: std::sync::mpsc::Receiver<crate::channels::AppendEntries>,
-    pub to_service: std::sync::mpsc::Sender<crate::channels::AppendEntries>,
-}
-
-impl<T> Raft<T> {
-    pub fn init(
-        path: &str,
-        from_service: std::sync::mpsc::Receiver<crate::channels::AppendEntries>,
-        to_service: std::sync::mpsc::Sender<crate::channels::AppendEntries>,
-    ) -> Result<Raft<Follower>, String> {
-        let ctx = Rc::new(RefCell::new(RaftContext::from_persisted_state(path)?));
-        Ok(Raft {
-            context: ctx,
-            state: PhantomData::<Follower>,
-            from_service,
-            to_service,
+            election_state: ElectionState::default(),
         })
     }
 }

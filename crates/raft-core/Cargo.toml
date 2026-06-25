@@ -12,3 +12,4 @@ dotenv = "0.15.0"
 rand = "0.10.1"
 once_cell = "1.21.4"
 raft-models = { path = "../raft-models" }
+either = { workspace = true }
