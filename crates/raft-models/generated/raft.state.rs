@@ -21,10 +21,10 @@ pub struct ServerState {
     #[prost(uint64, tag = "5")]
     pub last_applied: u64,
 }
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct LeaderState {
-    #[prost(uint64, repeated, tag = "1")]
-    pub next_index: ::prost::alloc::vec::Vec<u64>,
-    #[prost(uint64, repeated, tag = "2")]
-    pub match_index: ::prost::alloc::vec::Vec<u64>,
+    #[prost(map = "uint64, uint64", tag = "1")]
+    pub next_index: ::std::collections::HashMap<u64, u64>,
+    #[prost(map = "uint64, uint64", tag = "2")]
+    pub match_index: ::std::collections::HashMap<u64, u64>,
 }

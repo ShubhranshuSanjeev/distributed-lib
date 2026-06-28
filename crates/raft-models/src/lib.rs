@@ -38,3 +38,45 @@ impl ServerState {
         }
     }
 }
+
+pub trait RaftMessage {
+    fn term(&self) -> u64;
+    fn is_heartbeat(&self) -> bool;
+}
+
+impl RaftMessage for rpc::AppendEntriesRequest {
+    fn term(&self) -> u64 {
+        self.term
+    }
+
+    fn is_heartbeat(&self) -> bool {
+        self.entries.is_empty()
+    }
+}
+impl RaftMessage for rpc::RequestVoteRequest {
+    fn term(&self) -> u64 {
+        self.term
+    }
+
+    fn is_heartbeat(&self) -> bool {
+        false
+    }
+}
+impl RaftMessage for rpc::RequestVoteResponse {
+    fn term(&self) -> u64 {
+        self.term
+    }
+
+    fn is_heartbeat(&self) -> bool {
+        false
+    }
+}
+impl RaftMessage for rpc::AppendEntriesResponse {
+    fn term(&self) -> u64 {
+        self.term
+    }
+
+    fn is_heartbeat(&self) -> bool {
+        false
+    }
+}

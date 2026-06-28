@@ -1,4 +1,4 @@
-use raft_core::channels::events::Event;
+use raft_core::events::Event;
 
 pub struct RaftServer {
     to_core: std::sync::mpsc::Sender<Event>,
@@ -6,7 +6,10 @@ pub struct RaftServer {
 }
 
 impl RaftServer {
-    pub fn new(to_core: std::sync::mpsc::Sender<Event>, from_core: std::sync::mpsc::Receiver<Event>) -> Self {
+    pub fn new(
+        to_core: std::sync::mpsc::Sender<Event>,
+        from_core: std::sync::mpsc::Receiver<Event>,
+    ) -> Self {
         Self { to_core, from_core }
     }
 
@@ -17,7 +20,6 @@ impl RaftServer {
         self.from_core.try_recv()
     }
 }
-
 
 // #[tonic::async_trait]
 // impl crate::server::raft_service_server::RaftService for RaftServer {

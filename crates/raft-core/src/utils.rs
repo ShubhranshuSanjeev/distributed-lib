@@ -1,5 +1,3 @@
-pub mod state_transition;
-
 use std::str::FromStr;
 
 pub fn get_from_env_unsafe<F>(name: &str) -> Result<F, String>

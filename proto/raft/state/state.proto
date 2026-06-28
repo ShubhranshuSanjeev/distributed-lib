@@ -19,6 +19,6 @@ message ServerState {
 }
 
 message LeaderState {
-    repeated uint64 next_index = 1;
-    repeated uint64 match_index = 2;
+    map<uint64, uint64> next_index = 1;
+    map<uint64, uint64> match_index = 2;
 }

@@ -11,8 +11,8 @@ pub struct RequestVote {
 
 // From Server to Core
 pub struct AppendResult {
-    from: ClusterMemberId,
-    response: raft_models::rpc::AppendEntriesResponse,
+    pub from: ClusterMemberId,
+    pub response: raft_models::rpc::AppendEntriesResponse,
 }
 pub struct VoteResult {
     pub from: ClusterMemberId,
@@ -24,4 +24,5 @@ pub enum Event {
     RequestVote(RequestVote),
     AppendResult(AppendResult),
     VoteResult(VoteResult),
+    ClientRequest,
 }
