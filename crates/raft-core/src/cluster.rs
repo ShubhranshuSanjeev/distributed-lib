@@ -2,7 +2,7 @@ pub mod member;
 
 pub struct ClusterConfig {
     pub members: Vec<member::ClusterMember>,
-    pub replication_factor: u64,
+    pub quorum_size: u64,
     pub my_id: member::ClusterMemberId,
 }
 
@@ -15,7 +15,7 @@ impl ClusterConfig {
 
         Ok(ClusterConfig {
             members,
-            replication_factor,
+            quorum_size: replication_factor,
             my_id,
         })
     }
