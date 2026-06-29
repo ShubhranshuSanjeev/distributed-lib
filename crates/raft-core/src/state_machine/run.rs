@@ -3,12 +3,10 @@ use std::sync::mpsc::TryRecvError;
 use raft_models::rpc::RequestVoteResponse;
 
 use crate::{
-    events::{AppendResult, Event, RequestVote, VoteResult},
-    state_machine::{
+    constants::{ELECTION_TIMEOUT, JITTER_MAX}, events::{AppendResult, Event, RequestVote, VoteResult}, state_machine::{
         Raft,
         transitions::{RaftNode, Transition},
-    },
-    states::{Candidate, Follower, Leader},
+    }, states::{Candidate, Follower, Leader}
 };
 
 impl Raft<Follower> {
@@ -43,6 +41,9 @@ impl Raft<Follower> {
                             return Transition::Shutdown(e);
                         }
                     }
+                }
+                Ok(Event::ClientRequest(r)) => {
+                    // respond with leader information
                 }
                 Ok(_) => { /*noop */ }
             }
@@ -97,6 +98,9 @@ impl Raft<Candidate> {
                         }
                     }
                 }
+                Ok(Event::ClientRequest(r)) => {
+                    // respond with leader information
+                }
                 Ok(_) => { /*noop */ }
             }
         }
@@ -106,13 +110,21 @@ impl Raft<Candidate> {
 impl Raft<Leader> {
     fn run(self) -> Transition {
         let mut raft = self;
+
+        let heartbeat_loop = std::thread::spawn(|| {
+            loop {
+                raft.send_heartbeat();
+                std::thread::sleep(std::time::Duration::from_millis(JITTER_MAX));
+            }
+        });
+
         loop {
             match raft.try_receive() {
                 Err(TryRecvError::Disconnected) => {
                     return Transition::Shutdown("disconnected".to_string());
                 }
                 Err(TryRecvError::Empty) => { /*noop */ }
-                Ok(Event::ClientRequest) => {
+                Ok(Event::ClientRequest(r)) => {
                     todo!()
                 }
                 Ok(Event::AppendEntries(r)) => {

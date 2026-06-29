@@ -1,3 +1,5 @@
+use std::str::Bytes;
+
 use crate::cluster::member::ClusterMemberId;
 
 // Core -> Server, or Server -> Core
@@ -19,10 +21,14 @@ pub struct VoteResult {
     pub response: raft_models::rpc::RequestVoteResponse,
 }
 
+pub struct ClientRequest {
+    pub command: Vec<u8>
+}
+
 pub enum Event {
     AppendEntries(AppendEntries),
     RequestVote(RequestVote),
     AppendResult(AppendResult),
     VoteResult(VoteResult),
-    ClientRequest,
+    ClientRequest(ClientRequest),
 }
